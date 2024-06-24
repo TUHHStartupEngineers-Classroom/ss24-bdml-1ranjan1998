@@ -25,5 +25,5 @@ navbar:
       href: 07_class_notes.html
     - text: "Links"
       href: 08_links.html
-output_dir: "C:/Users/ranja/Documents/GitHub/ss24-bdml-1ranjan/Business Decisions with Machine Learning/Machine Learning/e38e5f13d37a73bf413d00875b9de2e7785c79c3"
+output_dir: "C:/Users/ranja/Documents/GitHub/ss24-bdml-1ranjan1998/Machine Learning/fundfiles
 exclude: ["raw_data", "challenges", "docks.jpg"]
