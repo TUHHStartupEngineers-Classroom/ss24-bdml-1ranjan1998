@@ -1,0 +1,15 @@
+{
+  "hash": "d3aff6b903ec51664f841f7c72ff7d1a",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: \"01 Machine Learning Fundamentals\"\nauthor: \"Ranjan Mahesh\"\ndate: \"2024-06-22\"\noutput:\n  html_document:\n    toc: true\n    toc_float: true\n    df_print: paged\n    number_sections: true\n    toc_depth: 3\n---\n\nknitr::opts_chunk$set(\n    echo = TRUE,\n    message = FALSE,\n    warning = FALSE\n)\nlibrary(tidyverse)\nlibrary(tidyquant)\nlibrary(broom)\nlibrary(umap)\nsp_500_prices_tbl <- read_rds(\"C:/Users/ranja/Documents/GitHub/ss24-bdml-1ranjan1998/Machine Learning/data/Business Decisions with Machine Learning/sp_500_prices_tbl.rds\")\nsp_500_index_tbl <- read_rds(\"C:/Users/ranja/Documents/GitHub/ss24-bdml-1ranjan1998/Machine Learning/data/Business Decisions with Machine Learning/sp_500_index_tbl.rds\")\nsp_500_daily_returns_tbl <- sp_500_prices_tbl %>%\n  select(symbol, date, adjusted) %>%\n  filter(date >= \"2018-01-01\") %>%\n  group_by(symbol) %>%\n  mutate(adjusted_lag = lag(adjusted)) %>%\n  filter(!is.na(adjusted_lag)) %>%\n  mutate(diff = adjusted - adjusted_lag,\n         pct_return = diff / adjusted_lag) %>%\n  select(symbol, date, pct_return)\nstock_date_matrix_tbl <- sp_500_daily_returns_tbl %>%\n  pivot_wider(names_from = date, values_from = pct_return, values_fill = 0)\nkmeans_obj <- stock_date_matrix_tbl %>%\n  select(-symbol) %>%\n  kmeans(centers = 4, nstart = 20)\nkmeans_mapper <- function(center) {\n  stock_date_matrix_tbl %>%\n    select(-symbol) %>%\n    kmeans(centers = center, nstart = 20)\n}\n\nk_means_mapped_tbl <- tibble(centers = 1:30) %>%\n  mutate(k_means = map(centers, kmeans_mapper),\n         glance = map(k_means, glance))\numap_results <- stock_date_matrix_tbl %>%\n  umap()\n\numap_results_tbl <- umap_results$layout %>%\n  as_tibble() %>%\n  bind_cols(stock_date_matrix_tbl %>% select(symbol))\nk_means_obj <- k_means_mapped_tbl %>%\n  pull(k_means) %>%\n  pluck(3)\n\numap_kmeans_results_tbl <- umap_results_tbl %>%\n  left_join(augment(k_means_obj, stock_date_matrix_tbl) %>%\n              select(symbol, .cluster), by = \"symbol\") %>%\n  left_join(sp_500_index_tbl %>% select(symbol, company, sector), by = \"symbol\")\numap_kmeans_results_tbl %>%\n  ggplot(aes(x = V1, y = V2, color = factor(.cluster))) +\n  geom_point(alpha = 0.5) +\n  geom_text(aes(label = symbol), vjust = -0.5, hjust = 0.5, size = 2) +\n  scale_color_manual(values = palette_light() %>% rep(3)) +\n  labs(title = \"Company Segmentation: 2D Projection with K-Means Clustering and UMAP\",\n       subtitle = \"UMAP 2D Projection with K-Means Cluster Assignment\") +\n  theme_minimal()\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}
